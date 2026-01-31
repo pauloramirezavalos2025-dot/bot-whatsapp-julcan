@@ -1,12 +1,9 @@
 import os
 from pymongo import MongoClient
-from flask import Flask, request
 
-app = Flask(__name__)
-
-# Render nos dará esta URL mediante una variable de entorno
-MONGO_URI = os.getenv("MONGO_URI")
-client = MongoClient(MONGO_URI)
+# Esto jala la "llave" que pusimos en Render
+mongo_uri = os.getenv("MONGO_URI")
+client = MongoClient(mongo_uri)
 db = client["RegistroCivil"]
 coleccion = db["actas"]
 
