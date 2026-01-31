@@ -4,38 +4,37 @@ from pymongo import MongoClient
 
 app = Flask(__name__)
 
-# Conexión con la variable de entorno que configuramos en Render
+# Conexión segura usando la variable que configuramos en Render
 mongo_uri = os.getenv("MONGO_URI") #
 client = MongoClient(mongo_uri)
-db = client["RegistroCivil"] #
+db = client["RegistroCivil"]
 coleccion = db["actas"]
 
 @app.route("/", methods=["GET"])
 def inicio():
-    return "Bot de Actas funcionando correctamente en Render"
+    return "✅ El Bot de Actas está en línea y conectado a MongoDB."
 
 @app.route("/whatsapp", methods=["POST"])
 def whatsapp_bot():
-    # 1. Obtenemos el mensaje que envió el usuario
-    # Dependiendo de qué usemos (Twilio, etc.), el campo puede variar. 
-    # Usualmente es 'Body'
-    mensaje_usuario = request.form.get('Body', '').strip()
+    # 1. Extraemos el mensaje (DNI) enviado por el usuario
+    # El campo 'Body' es el estándar para la mayoría de plataformas como Twilio
+    dni_recibido = request.form.get('Body', '').strip()
     
-    # 2. Buscamos en la base de datos de MongoDB
-    # Buscamos el DNI que coincida con el mensaje recibido
-    resultado = coleccion.find_one({"dni": mensaje_usuario}) #
+    # 2. Buscamos en MongoDB Atlas
+    # Buscamos el documento donde el campo 'dni' coincida con lo recibido
+    resultado = coleccion.find_one({"dni": dni_recibido}) #
     
     if resultado:
-        # 3. Si existe, armamos la respuesta con los datos reales
-        respuesta = (f"✅ Acta encontrada:\n"
-                     f"👤 Nombre: {resultado['nombre']}\n"
-                     f"📑 Tipo: {resultado['tipo']}\n"
-                     f"📍 Estado: {resultado['estado']}\n"
-                     f"📝 Obs: {resultado.get('observacion', 'Ninguna')}")
+        # 3. Construimos la respuesta con los datos de 'PAULO RAMIREZ' o cualquier otro
+        respuesta = (f"🔍 *Acta Encontrada* 🔍\n\n"
+                     f"👤 *Nombre:* {resultado['nombre']}\n"
+                     f"📑 *Tipo:* {resultado['tipo']}\n"
+                     f"📍 *Estado:* {resultado['estado']}\n"
+                     f"📝 *Obs:* {resultado.get('observacion', 'Sin observaciones')}")
     else:
-        respuesta = "❌ No se encontró ningún acta con ese DNI. Por favor, verifique el número."
+        respuesta = f"❌ No se encontró acta para el DNI: {dni_recibido}"
 
-    # Aquí deberías devolver la respuesta en el formato que pida tu proveedor de WhatsApp
+    # Devolvemos la respuesta (formato texto simple para configuración inicial)
     return respuesta
 
 if __name__ == "__main__":
