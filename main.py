@@ -13,10 +13,11 @@ ID_NUMERO_TELEFONO = "994254463766649"
 DB_CONFIG = {
     'host': '157.90.212.15',
     'user': 'radioest_usuarioactasmpj2023',
-    'password': '41913213aA.@',
-    'database': 'radioest_actasmpj2023'
+    'password': '41913213aA.@', # Asegúrate que no haya espacios aquí
+    'database': 'radioest_actasmpj2023',
+    'charset': 'utf8mb4', # Añadimos esto para igualar tu PHP
+    'auth_plugin': 'mysql_native_password' # Esto ayuda a saltar errores de protocolo
 }
-
 def enviar_mensaje_whatsapp(numero, texto):
     url = f"https://graph.facebook.com/v22.0/{ID_NUMERO_TELEFONO}/messages"
     headers = {"Authorization": f"Bearer {TOKEN_ACCESO_META}", "Content-Type": "application/json"}
