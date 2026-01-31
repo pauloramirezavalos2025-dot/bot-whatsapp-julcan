@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+import mysql.connector
 import requests
 
 app = Flask(__name__)
@@ -7,6 +8,25 @@ app = Flask(__name__)
 TOKEN_VERIFICACION = "julcan2026"
 TOKEN_ACCESO_META = "EAAboRvadyv4BQuk4sL4aLVHZAzKAq7F3kdU61w5I6k4CoUE34Kmtd8abljQ4PG8gBvUxWXwUW1Ao1DWAoOfZC4gfyOCYvXgZCnpJ27El7J68uVydkKfWv6WjOtgK5Rdxnqq65elTLqpyZAKMJS6OI2t779bU14xPSmNfA2P9ZAjtOZAKhBZCjmkAiHnSQFDwAQLxAZADHZB0jHHWiulNtYEFrpxdx7NuOBN015mkbgg9UAZA5RyDuRS0ZBDp83Dx7UgK4fjoBWZBwcqaiotrXEqEatDJiSp1" # Pega aquí el código que empieza con EAA...
 ID_NUMERO_TELEFONO = "994254463766649"
+
+# CONFIGURACIÓN DE TU BASE DE DATOS
+DB_CONFIG = {
+    'host': '157.90.212.15',
+    'user': 'radioest_usuarioactasmpj2023',
+    'password': '41913213aA.@',
+    'database': 'radioest_actasmpj2023'
+}
+
+def enviar_mensaje_whatsapp(numero, texto):
+    url = f"https://graph.facebook.com/v22.0/{ID_NUMERO_TELEFONO}/messages"
+    headers = {"Authorization": f"Bearer {TOKEN_ACCESO_META}", "Content-Type": "application/json"}
+    data = {
+        "messaging_product": "whatsapp",
+        "to": numero,
+        "type": "text",
+        "text": {"body": texto}
+    }
+    requests.post(url, json=data, headers=headers)
 
 @app.route('/webhook', methods=['GET'])
 def verificar_webhook():
@@ -18,7 +38,34 @@ def verificar_webhook():
 
 @app.route('/webhook', methods=['POST'])
 def recibir_mensajes():
-    # Aquí irá la lógica para buscar en tus 60,000 actas
+    data = request.get_json()
+    try:
+        if "messages" in data["entry"][0]["changes"][0]["value"]:
+            mensaje = data["entry"][0]["changes"][0]["value"]["messages"][0]
+            numero_remitente = mensaje["from"]
+            texto_usuario = mensaje["text"]["body"].upper() # Convertimos a mayúsculas para buscar
+
+            # CONEXIÓN Y BÚSQUEDA EN MYSQL
+            conn = mysql.connector.connect(**DB_CONFIG)
+            cursor = conn.cursor(dictionary=True)
+            
+            # Buscamos por apellido (ajusta 'apellidos' al nombre de tu columna)
+            query = "SELECT PATERNO, MATERNO, NOMBRES FROM JUGUETES WHERE PATERNO LIKE %s LIMIT 1"
+            cursor.execute(query, (f"%{texto_usuario}%",))
+            resultado = cursor.fetchone()
+
+            if resultado:
+                respuesta = f"✅ Acta encontrada.\nDNI: {resultado['PATERNO']}\nDNI: {resultado['DNI']}"
+            else:
+                respuesta = "❌ No se encontró ningún acta con ese apellido en Julcán."
+
+            enviar_mensaje_whatsapp(numero_remitente, respuesta)
+            cursor.close()
+            conn.close()
+
+    except Exception as e:
+        print(f"Error: {e}")
+        
     return jsonify({"status": "success"}), 200
 
 if __name__ == "__main__":
