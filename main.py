@@ -4,12 +4,12 @@ import requests
 
 app = Flask(__name__)
 
-# CONFIGURACIÓN TÉCNICA
+# CONFIGURACIÓN TÉCNICA DE META
 TOKEN_VERIFICACION = "julcan2026"
-TOKEN_ACCESO_META = "EAAboRvadyv4BQuXaiOyA8vSZCehH5jqemYdZCiM4AAbTj6bHv944tq2YgV7AlSPGPwFebYqoI2MqR0K9zjjOxR5LowZAeYCThRGpTzFJKZA57cP4kjEBv52OIBm1ZBNcLCw8FJ6QOKNXkZBUQFaZB04iQwzY4ZBIntTIHEyc4UbnSi3LoU8zs9wQWai0oQCxDF98TjAWTEOxcFEws4AXmvAhLFpjarWpOckZAyFjLdlM2RXoS8vC2ZBpEoN8mb0b1c4KfIIPHUXzKDmAFYZAKK97iJKrCvz" # Pega aquí el código que empieza con EAA...
+TOKEN_ACCESO_META = "EAAboRvadyv4BQuXaiOyA8vSZCehH5jqemYdZCiM4AAbTj6bHv944tq2YgV7AlSPGPwFebYqoI2MqR0K9zjjOxR5LowZAeYCThRGpTzFJKZA57cP4kjEBv52OIBm1ZBNcLCw8FJ6QOKNXkZBUQFaZB04iQwzY4ZBIntTIHEyc4UbnSi3LoU8zs9wQWai0oQCxDF98TjAWTEOxcFEws4AXmvAhLFpjarWpOckZAyFjLdlM2RXoS8vC2ZBpEoN8mb0b1c4KfIIPHUXzKDmAFYZAKK97iJKrCvz" # Pega aquí el Token que empieza con EAA
 ID_NUMERO_TELEFONO = "994254463766649"
 
-# CONFIGURACIÓN DE TU BASE DE DATOS
+# CONFIGURACIÓN DE TU BASE DE DATOS (Basado en tu PHP)
 DB_CONFIG = {
     'host': '157.90.212.15',
     'user': 'radioest_usuarioactasmpj2023',
@@ -43,28 +43,31 @@ def recibir_mensajes():
         if "messages" in data["entry"][0]["changes"][0]["value"]:
             mensaje = data["entry"][0]["changes"][0]["value"]["messages"][0]
             numero_remitente = mensaje["from"]
-            texto_usuario = mensaje["text"]["body"].upper() # Convertimos a mayúsculas para buscar
+            # El ciudadano enviará el apellido para buscar
+            busqueda = mensaje["text"]["body"].strip().upper()
 
-            # CONEXIÓN Y BÚSQUEDA EN MYSQL
+            # CONEXIÓN Y BÚSQUEDA
             conn = mysql.connector.connect(**DB_CONFIG)
             cursor = conn.cursor(dictionary=True)
             
-            # Buscamos por apellido (ajusta 'apellidos' al nombre de tu columna)
-            query = "SELECT PATERNO, MATERNO, NOMBRES FROM JUGUETES WHERE PATERNO LIKE %s LIMIT 1"
-            cursor.execute(query, (f"%{texto_usuario}%",))
-            resultado = cursor.fetchone()
+            # Buscamos coincidencias en el Apellido Paterno (como en tu PHP)
+            sql = "SELECT PATERNO, MATERNO, NOMBRES, SEXO, ANO FROM JUGUETES WHERE PATERNO LIKE %s LIMIT 3"
+            cursor.execute(sql, (f"%{busqueda}%",))
+            resultados = cursor.fetchall()
 
-            if resultado:
-                respuesta = f"✅ Acta encontrada.\nDNI: {resultado['PATERNO']}\nDNI: {resultado['DNI']}"
+            if resultados:
+                respuesta = f"🔎 Resultados encontrados en Julcán para '{busqueda}':\n"
+                for fila in resultados:
+                    respuesta += f"\n👤 {fila['NOMBRES']} {fila['PATERNO']} {fila['MATERNO']}\n📅 Año: {fila['ANO']} | Género: {fila['SEXO']}\n"
             else:
-                respuesta = "❌ No se encontró ningún acta con ese apellido en Julcán."
+                respuesta = f"❌ No se encontraron actas con el apellido '{busqueda}' en la base de datos."
 
             enviar_mensaje_whatsapp(numero_remitente, respuesta)
             cursor.close()
             conn.close()
 
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error en el servidor: {e}")
         
     return jsonify({"status": "success"}), 200
 
