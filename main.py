@@ -5,7 +5,7 @@ app = Flask(__name__)
 
 # CONFIGURACIÓN TÉCNICA
 TOKEN_VERIFICACION = "julcan2026"
-TOKEN_ACCESO_META = "TU_TOKEN_LARGO_AQUÍ" # Pega aquí el código que empieza con EAA...
+TOKEN_ACCESO_META = "EAAboRvadyv4BQljFQFp02Dc70vZBPalZBGrCkaMvKvQ0qNzQXgRvLI9onWGxKwBZBrFxc9kg8PGqC0MTMDJrYZARc5nRpy9wz59WkuWE5BIUqo7vTKEVkbyc6odK77AQthd0n6LSX9ZCjbYIJUhNuIiCJZByZCuaIcpn5OzVmxgGgakM31kXbRL01ZCh8bvc0theQ1W74m5gyWwSvssvC9RH722vZAp1nuYcs25u6jCPnfCAHHBrdZAJXngMzqArDTqsPsZB95WmY4LZCBXpHZAnSe7S5E8oe" # Pega aquí el código que empieza con EAA...
 ID_NUMERO_TELEFONO = "994254463766649"
 
 @app.route('/webhook', methods=['GET'])
